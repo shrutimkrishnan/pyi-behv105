@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 st.set_page_config(layout="wide")
 
 # Read the CSV file from the public S3 URL
-data = pd.read_csv("https://behaviorally-testing.s3.amazonaws.com/sankey_relevant_buy_session_v1.csv")
+data = pd.read_csv("https://behaviorally-testing.s3.amazonaws.com/sankey_relevant_session_v1.csv")
 
 st.title("Behaviorally Sankey beh_v105")
 st.write("Sankey Diagram of Participant Journeys")
@@ -21,6 +21,9 @@ selected_app = st.selectbox("Select App", options=list(app_names.keys()), format
 # Filter the data after app selection
 if selected_app:
     app_data = data[data['apppackagename'] == selected_app]
+    print(app_data)
+
+    app_data['participantId'] = app_data['participantId'].astype('str')
 
     # Order the participant_ids numerically and add an "All" option
     participant_ids = sorted(app_data['participantId'].unique())
@@ -28,6 +31,10 @@ if selected_app:
 
     # Filter dropdown for participantId
     selected_participant = st.selectbox("Select Participant", participant_ids)
+
+    # Third filter for journey type
+    journey_types = ["Purchase", "Non-Purchase"]
+    selected_journey_type = st.selectbox("Select Journey Type", journey_types, index=0)  # "Purchase" is default
 
     # Function to process the journeys until purchases
     def journeys_until_first_purchase(pages):
@@ -44,6 +51,9 @@ if selected_app:
                 break  # Stop after the first purchase
             elif pages[i] != pages[i - 1]:  # Compare with the previous element
                 current_journey.append(pages[i])
+
+        if 'Purchase' not in current_journey:
+            journeys.append(current_journey)
 
         return journeys
 
@@ -95,13 +105,16 @@ if selected_app:
         aggregated_data['pagetype'] = aggregated_data['pagetype'].apply(get_first_and_last_five_journeys)
         aggregated_data['journey_type'] = aggregated_data['pagetype'].apply(lambda x: 'Non Purchase Journeys' if x[-1] != 'Purchase' else 'Purchase Journeys')
         aggregated_data['pagetype_length'] = aggregated_data['pagetype'].apply(len)
-        purchase_paths = aggregated_data[aggregated_data['journey_type'] == 'Purchase Journeys']
 
-        purchase_paths_all_df = get_sankey_format_data(purchase_paths)
+        # Filter data based on selected journey type
+        if selected_journey_type == "Purchase":
+            filtered_df = aggregated_data[aggregated_data['journey_type'] == 'Purchase Journeys']
+        else:
+            filtered_df = aggregated_data[aggregated_data['journey_type'] == 'Non Purchase Journeys']
 
-        return purchase_paths_all_df
+        return get_sankey_format_data(filtered_df)
 
-    # Filter the data based on the selected participant
+    # Filter the data based on the selected participant and journey type
     purchase_paths_df = get_journeys_until_first_purchase(data, selected_app, selected_participant)
 
     event_colors = {
@@ -119,6 +132,9 @@ if selected_app:
         "History": "#edda12",
         "Brandshop": "#64739b",
         "Me":"#63d6d6",
+        "Non-Purchase": "#63d8d6",
+        "Shopeemall":"#23d8d6",
+        "Allproductsandservices":"#62d8d6",
     }
 
     # Initialize lists for sources, targets, values, and colors
@@ -146,8 +162,12 @@ if selected_app:
         for i in range(len(steps) - 1):
             current_step = steps[i]
             next_step = steps[i + 1]
-            if next_step in ['Purchase']:
-                next_step_label = next_step
+
+            # Ensure all non-purchase paths end at a single node "Non-Purchase"
+            if next_step == 'Non-Purchase':
+                next_step_label = 'Non-Purchase'
+            elif next_step == 'Purchase':
+                next_step_label = 'Purchase'
             else:
                 next_step_label = f"Step{i + 1}_{next_step}"
 
