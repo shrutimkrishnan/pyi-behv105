@@ -186,7 +186,7 @@ if selected_app:
             thickness=20,
             line=dict(color="black", width=0.5),
             label=[label.split("_")[1] if "_" in label else label for label in node_labels],
-            color=node_colors,
+            color=node_colors
         ),
         link=dict(
             source=source,
