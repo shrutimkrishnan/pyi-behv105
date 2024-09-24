@@ -179,35 +179,36 @@ if selected_app:
             value.append(1)  # Each transition has a value of 1
             link_colors.append("lightgrey")  # Transition color
 
-    # Create the Sankey diagram
-    fig = go.Figure(go.Sankey(
-        node=dict(
-            pad=20,  # Increased padding for clearer separation
-            thickness=20,
-            line=dict(color="black", width=0.5),
-            label=[label.split("_")[1] if "_" in label else label for label in node_labels],
-            color=node_colors
-        ),
-        link=dict(
-            source=source,
-            target=target,
-            value=value,
-            color=link_colors
-        )
-    ))
-
-    # Update layout to control font settings globally and set the width of the figure
-    fig.update_layout(
-        title_text="E-commerce Purchase Journeys (First 5 steps, Last 5 steps only)",
-        font=dict(
-            size=14,  # Larger font size
-            color="black",  # Set font color to black for better contrast
-            family="Arial"  # Simpler, more readable font
-        ),
-        font_size=10,  # Additional font size control
-        width=1400,  # Set width for wide-screen display
-        height=800  # Optional: Set height if needed
+# Create the Sankey diagram without the 'font' parameter in node
+fig = go.Figure(go.Sankey(
+    node=dict(
+        pad=20,  # Increased padding for clearer separation
+        thickness=20,
+        line=dict(color="black", width=0.5),  # Optional node border
+        label=[label.split("_")[1] if "_" in label else label for label in node_labels],
+        color=node_colors  # Background colors for nodes
+    ),
+    link=dict(
+        source=source,
+        target=target,
+        value=value,
+        color=link_colors
     )
+))
 
-    # Display the Sankey diagram in Streamlit with full width
-    st.plotly_chart(fig, use_container_width=True)
+# Update layout to control font settings globally and set the width of the figure
+fig.update_layout(
+    title_text="E-commerce Purchase Journeys (First 5 steps, Last 5 steps only)",
+    # font=dict(
+    #     size=14,  # Adjusted for better readability across the chart
+    #     color="black",  # Set font color to black for overall text contrast
+    #     family="Arial"  # Use a readable font family
+    # ),
+    font_size=14,
+    font_color ="red",
+    width=1600,  # Adjust width for a better display
+    height=900  # Adjust height for a better display
+)
+
+# Display the Sankey diagram in Streamlit with full width
+st.plotly_chart(fig, use_container_width=True)
