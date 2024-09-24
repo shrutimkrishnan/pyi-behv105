@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 st.set_page_config(layout="wide")
 
 # Read the CSV file from the public S3 URL
-data = pd.read_csv("https://behaviorally-testing.s3.amazonaws.com/sankey_relevant_session_v1.csv")
+data = pd.read_csv("https://behaviorally-testing.s3.amazonaws.com/sankey_relevant_session_v2.csv")
 
 st.title("Behaviorally Sankey beh_v105")
 st.write("Sankey Diagram of Participant Journeys")
